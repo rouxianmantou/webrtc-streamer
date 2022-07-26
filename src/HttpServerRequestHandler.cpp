@@ -64,20 +64,20 @@ class RequestHandler : public CivetHandler
 		Json::Value  in = this->getInputMessage(req_info, conn);
 		
 		// invoke API implementation
-		Json::Value out(m_func(req_info, in));
+		std::tuple<int, std::map<std::string,std::string>,Json::Value> out(m_func(req_info, in));
 		
-        int code;
+        int code = std::get<0>(out);
         std::string answer;
 
 		// fill out
-		if (out.isNull() == false)
+        Json::Value& body = std::get<2>(out);
+		if (body.isNull() == false)
 		{
-            if (out.isString()) {
-                answer = out.asString();
+            if (body.isString()) {
+                answer = body.asString();
             } else {
-                answer = Json::writeString(m_writerBuilder,out);
+                answer = Json::writeString(m_writerBuilder,body);
             }
-            code = 200;
 		} else {
             code = 500;
             answer = mg_get_response_code_text(conn, code);
@@ -88,6 +88,10 @@ class RequestHandler : public CivetHandler
         mg_printf(conn,"Access-Control-Allow-Origin: *\r\n");
         mg_printf(conn,"Content-Type: text/plain\r\n");
         mg_printf(conn,"Content-Length: %zd\r\n", answer.size());
+        std::map<std::string,std::string> & headers = std::get<1>(out);
+        for (auto & it : headers) {
+            mg_printf(conn,"%s: %s\r\n", it.first.c_str(), it.second.c_str());
+        } 
         mg_printf(conn,"\r\n");
         mg_write(conn,answer.c_str(),answer.size());
         
@@ -284,9 +288,9 @@ class WebsocketHandler: public CivetWebSocketHandler {
                             
                     // invoke API implementation
                     const struct mg_request_info *req_info = mg_get_request_info(conn);
-                    Json::Value out(func(req_info, in.get("body","")));
+                    std::tuple<int, std::map<std::string,std::string>,Json::Value> out(func(req_info, in.get("body","")));
                     
-                    answer = Json::writeString(m_jsonWriterBuilder,out);
+                    answer = Json::writeString(m_jsonWriterBuilder,std::get<2>(out));
                 } else {
                     answer = mg_get_response_code_text(conn, 500);
                 }

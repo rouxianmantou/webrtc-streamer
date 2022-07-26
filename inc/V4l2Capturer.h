@@ -18,8 +18,9 @@
 #include "EncodedVideoFrameBuffer.h"
 
 #include "V4l2Capture.h"
+#include "VideoSource.h"
 
-class V4l2Capturer : public rtc::VideoSourceInterface<webrtc::VideoFrame>
+class V4l2Capturer : public VideoSource
 {
 public:
 	static V4l2Capturer *Create(const std::string &videourl, const std::map<std::string, std::string> &opts, std::unique_ptr<webrtc::VideoDecoderFactory> &videoDecoderFactory)
@@ -55,6 +56,9 @@ public:
 		Destroy();
 	}
 
+    int width() { return m_width;  }
+    int height() { return m_height;  }        
+
 private:
 	V4l2Capturer() : m_stop(false) {}
 
@@ -63,6 +67,9 @@ private:
 			  size_t fps,
 			  const std::string &videourl)
 	{
+		m_width = width;
+		m_height = height;
+
 		std::string device = "/dev/video0";
 		if (videourl.find("v4l2://") == 0) {
 			device = videourl.substr(strlen("v4l2://"));
@@ -150,20 +157,11 @@ private:
 		}
 	}
 
-	void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame> *sink, const rtc::VideoSinkWants &wants) override
-	{
-		m_broadcaster.AddOrUpdateSink(sink, wants);
-	}
-
-	void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame> *sink) override
-	{
-		m_broadcaster.RemoveSink(sink);
-	}
-
-	bool m_stop;
-	std::thread m_capturethread;
-	std::unique_ptr<V4l2Capture> m_capture;
-	rtc::VideoBroadcaster m_broadcaster;
+	bool                                                    m_stop;
+	std::thread                                             m_capturethread;
+	std::unique_ptr<V4l2Capture>                            m_capture;
 	rtc::scoped_refptr<webrtc::EncodedImageBufferInterface> m_sps;
 	rtc::scoped_refptr<webrtc::EncodedImageBufferInterface> m_pps;
+	int                                                     m_width;		
+ 	int                                                     m_height;	
 };

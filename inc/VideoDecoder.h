@@ -55,6 +55,9 @@ class VideoDecoder : public rtc::VideoSourceInterface<webrtc::VideoFrame>, publi
             this->Stop();                    
         }
 
+        int width() { return m_scaler.width();  }
+        int height() { return m_scaler.height();  }
+
         std::vector< std::vector<uint8_t> > getInitFrames(const std::string & codec, const char* sdp) {
             std::vector< std::vector<uint8_t> > frames;
 
@@ -267,4 +270,27 @@ class VideoDecoder : public rtc::VideoSourceInterface<webrtc::VideoFrame>, publi
         int64_t                               m_previmagets;	
         int64_t                               m_prevts;
 
+};
+
+class VideoSourceWithDecoder : public rtc::VideoSourceInterface<webrtc::VideoFrame>
+{
+public:
+	VideoSourceWithDecoder(const std::map<std::string,std::string> & opts, std::unique_ptr<webrtc::VideoDecoderFactory>& videoDecoderFactory, bool wait = false): m_decoder(opts, videoDecoderFactory, wait) {}
+
+    // overide rtc::VideoSourceInterface<webrtc::VideoFrame>
+    void AddOrUpdateSink(rtc::VideoSinkInterface<webrtc::VideoFrame> *sink, const rtc::VideoSinkWants &wants)
+    {
+        m_decoder.AddOrUpdateSink(sink, wants);
+    }
+
+    void RemoveSink(rtc::VideoSinkInterface<webrtc::VideoFrame> *sink)
+    {
+        m_decoder.RemoveSink(sink);
+    }    
+
+	int width() { return m_decoder.width();  }
+    int height() { return m_decoder.height();  } 
+
+protected:
+    VideoDecoder                       m_decoder;	
 };
