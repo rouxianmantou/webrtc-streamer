@@ -1,10 +1,6 @@
 name: C/C++ CI linux
 
-on: 
-  push:
-    branches:
-    - test
-  workflow_dispatch
+on: [push, workflow_dispatch]
 
 jobs:
   build:
