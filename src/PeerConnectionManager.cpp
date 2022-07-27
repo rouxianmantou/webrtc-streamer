@@ -213,7 +213,10 @@ PeerConnectionManager::PeerConnectionManager(const std::list<std::string> &iceSe
 	m_signalingThread->SetName("signaling", NULL);
 	m_signalingThread->Start();
 	m_peer_connection_factory = webrtc::CreateModularPeerConnectionFactory(CreatePeerConnectionFactoryDependencies(m_signalingThread.get(), m_workerThread.get(), m_audioDeviceModule, m_audioDecoderfactory, useNullCodec));
-
+	// disable encryption
+	webrtc::PeerConnectionFactoryInterface::Options opts;
+	opts.disable_encryption = true;
+	m_peer_connection_factory->SetOptions(opts);
 	// build video audio map
 	m_videoaudiomap = getV4l2AlsaMap();
 
@@ -1094,6 +1097,8 @@ PeerConnectionManager::PeerConnectionObserver *PeerConnectionManager::CreatePeer
 	}
 
 	webrtc::PeerConnectionInterface::RTCConfiguration config;
+	// disable srtp
+	config.enable_dtls_srtp = false
 	if (m_usePlanB) {
 		config.sdp_semantics = webrtc::SdpSemantics::kPlanB;
 	} else {
