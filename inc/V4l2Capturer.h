@@ -71,9 +71,11 @@ private:
 		m_height = height;
 
 		std::string device = "/dev/video0";
+		std::cout << "DEBUG_Log V4l2Capturer#Init: videourl: " << videourl << std::endl;
 		if (videourl.find("v4l2://") == 0) {
 			device = videourl.substr(strlen("v4l2://"));
-		}		
+		}
+		std::cout << "DEBUG_Log V4l2Capturer#Init: device: " << device << std::endl;
 		V4L2DeviceParameters param(device.c_str(), V4L2_PIX_FMT_H264, width, height, fps);
 		m_capture.reset(V4l2Capture::create(param));
 

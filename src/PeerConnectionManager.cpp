@@ -1141,24 +1141,26 @@ PeerConnectionManager::PeerConnectionObserver *PeerConnectionManager::CreatePeer
 rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> PeerConnectionManager::CreateVideoSource(const std::string &videourl, const std::map<std::string, std::string> &opts)
 {
 	RTC_LOG(LS_INFO) << "videourl:" << videourl;
-
+	std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "videourl: " << videourl << std::endl;
 	std::string video = videourl;
 	if (m_config.isMember(video)) {
+		std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "video isMember!"std::endl;
 		video = m_config[video]["video"].asString();
 	}
-
+	std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "video: " << video << std::endl;
 	return CapturerFactory::CreateVideoSource(video, opts, m_publishFilter, m_peer_connection_factory, m_video_decoder_factory);
 }
 
 rtc::scoped_refptr<webrtc::AudioSourceInterface> PeerConnectionManager::CreateAudioSource(const std::string &audiourl, const std::map<std::string, std::string> &opts)
 {
 	RTC_LOG(LS_INFO) << "audiourl:" << audiourl;
-
+	std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audiourl: " << audiourl << std::endl;
 	std::string audio = audiourl;
 	if (m_config.isMember(audio)) {
+		std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audio isMember!"std::endl;
 		audio = m_config[audio]["audio"].asString();
 	}
-
+	std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audio: " << audio << std::endl;
 	std::map<std::string, std::string>::iterator it = m_videoaudiomap.find(audio);
 	if (it != m_videoaudiomap.end())
 	{
@@ -1194,9 +1196,12 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	bool ret = false;
 
 	// compute options
+	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: options: " << options << std::endl;
 	std::string optstring = options;
 	if (m_config.isMember(videourl)) {
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: m_config.isMember(videourl)! 1" << std::endl;
 		std::string urlopts = m_config[videourl]["options"].asString();
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: urlopts: " << urlopts << std::endl;
 		if (options.empty()) {
 			optstring = urlopts;
 		} else if (options.find_first_of("&")==0) {
@@ -1205,6 +1210,7 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 			optstring = options;
 		}
 	}
+	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: optstring: " << optstring << std::endl;
 
 	// convert options string into map
 	std::istringstream is(optstring);
@@ -1215,10 +1221,13 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 		opts[key] = value;
 	}
 
+	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: videourl: " << videourl << std::endl;
 	std::string video = videourl;
 	if (m_config.isMember(video)) {
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: m_config.isMember(video)! 2" << std::endl;
 		video = m_config[video]["video"].asString();
 	}
+	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: video: " << video << std::endl;
 
 	// compute audiourl if not set
 	std::string audio(audiourl);
@@ -1257,7 +1266,7 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 
 	// compute stream label removing space because SDP use label
 	std::string streamLabel = this->sanitizeLabel(videourl + "|" + audiourl + "|" + optcapturer);
-
+    std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: streamLabel: " << streamLabel << std::endl;
 	bool existingStream = false;
 	{
 		std::lock_guard<std::mutex> mlock(m_streamMapMutex);
@@ -1266,12 +1275,17 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 
 	if (!existingStream)
 	{
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: existingStream! false!" << std::endl;
 		// need to create the stream
 		rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> videoSource(this->CreateVideoSource(video, opts));
 		rtc::scoped_refptr<webrtc::AudioSourceInterface> audioSource(this->CreateAudioSource(audio, opts));
 		RTC_LOG(LS_INFO) << "Adding Stream to map";
 		std::lock_guard<std::mutex> mlock(m_streamMapMutex);
 		m_stream_map[streamLabel] = std::make_pair(videoSource, audioSource);
+	}
+	else
+	{
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: existingStream! true!" << std::endl;
 	}
 
 	// create a new webrtc stream
