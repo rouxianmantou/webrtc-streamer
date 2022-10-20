@@ -1144,7 +1144,7 @@ rtc::scoped_refptr<webrtc::VideoTrackSourceInterface> PeerConnectionManager::Cre
 	std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "videourl: " << videourl << std::endl;
 	std::string video = videourl;
 	if (m_config.isMember(video)) {
-		std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "video isMember!"std::endl;
+		std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "video isMember!" << std::endl;
 		video = m_config[video]["video"].asString();
 	}
 	std::cout << "DEBUG_Log PeerConnectionManager::CreateVideoSource: " << "video: " << video << std::endl;
