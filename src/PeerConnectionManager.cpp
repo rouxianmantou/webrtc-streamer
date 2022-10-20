@@ -1157,7 +1157,7 @@ rtc::scoped_refptr<webrtc::AudioSourceInterface> PeerConnectionManager::CreateAu
 	std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audiourl: " << audiourl << std::endl;
 	std::string audio = audiourl;
 	if (m_config.isMember(audio)) {
-		std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audio isMember!"std::endl;
+		std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audio isMember!" << std::endl;
 		audio = m_config[audio]["audio"].asString();
 	}
 	std::cout << "DEBUG_Log PeerConnectionManager::CreateAudioSource: " << "audio: " << audio << std::endl;
