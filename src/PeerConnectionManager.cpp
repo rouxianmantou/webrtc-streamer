@@ -1197,29 +1197,38 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 
 	// compute options
 	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: options: " << options << std::endl;
-	std::string optstring = options;
+	std::string cur_opt_string = options;
+	std::string def_opt_string = "";
 	if (m_config.isMember(videourl)) {
 		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: m_config.isMember(videourl)! 1" << std::endl;
-		std::string urlopts = m_config[videourl]["options"].asString();
-		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: urlopts: " << urlopts << std::endl;
+		def_opt_string = m_config[videourl]["options"].asString();
+		std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: def_opt_string: " << def_opt_string << std::endl;
 		if (options.empty()) {
-			optstring = urlopts;
+			cur_opt_string = def_opt_string;
 		} else if (options.find_first_of("&")==0) {
-			optstring = urlopts + options;
+			cur_opt_string = def_opt_string + options;
 		} else {
-			optstring = options;
+			cur_opt_string = options;
 		}
 	}
-	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: optstring: " << optstring << std::endl;
+	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: cur_opt_string: " << cur_opt_string << std::endl;
 
 	// convert options string into map
-	std::istringstream is(optstring);
+	std::istringstream cur_is(cur_opt_string);
+	std::istringstream def_is(def_opt_string);
 	std::map<std::string, std::string> opts;
-	std::string key, value;
-	while (std::getline(std::getline(is, key, '='), value, '&'))
+	std::string opt_key, opt_value;
+	while (std::getline(std::getline(cur_is, opt_key, '='), opt_value, '&'))
 	{
-		opts[key] = value;
+		opts[opt_key] = opt_value;
 	}
+
+	std::string def_opt_key, def_opt_value;
+	while (std::getLine(std::getline(def_is, def_opt_key, '='), def_opt_value, '&'))
+	{
+		print_opts_result(opts.try_emplace(def_opt_key, def_opt_value));
+	}
+	
 
 	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: videourl: " << videourl << std::endl;
 	std::string video = videourl;
@@ -1341,6 +1350,15 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 
 	return ret;
 }
+
+auto print_node = [](const auto &node) {
+    std::cout << "[" << node.first << "] = " << node.second << '\n';
+};
+ 
+auto print_opts_result = [](auto const &pair) {
+    std::cout << (pair.second ? "inserted: " : "ignored:  ");
+    print_node(*pair.first);
+};
 
 /* ---------------------------------------------------------------------------
 **  ICE callback
