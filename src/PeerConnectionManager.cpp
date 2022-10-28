@@ -1226,7 +1226,7 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	std::string def_opt_key, def_opt_value;
 	while (std::getLine(std::getline(def_is, def_opt_key, '='), def_opt_value, '&'))
 	{
-		print_opts_result(opts.try_emplace(def_opt_key, def_opt_value));
+		printOptsResult(opts.try_emplace(def_opt_key, def_opt_value));
 	}
 	
 
@@ -1351,14 +1351,14 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	return ret;
 }
 
-auto print_node = [](const auto &node) {
-    std::cout << "[" << node.first << "] = " << node.second << '\n';
-};
- 
-auto print_opts_result = [](auto const &pair) {
-    std::cout << (pair.second ? "inserted: " : "ignored:  ");
-    print_node(*pair.first);
-};
+void PeerConnectionManager::printNode(const auto &node) {
+	std::cout << "[" << node.first << "] = " << node.second << endl;
+}
+
+void PeerConnectionManager::printOptsResult(const auto &pair) {
+	std::cout << (pair.second ? "insert: " : "ignore: ");
+	printNode(*pair.first);
+}
 
 /* ---------------------------------------------------------------------------
 **  ICE callback
