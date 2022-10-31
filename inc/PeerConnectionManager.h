@@ -352,8 +352,7 @@ class PeerConnectionManager {
 		void                                                  createAudioModule(webrtc::AudioDeviceModule::AudioLayer audioLayer);
 		std::unique_ptr<webrtc::SessionDescriptionInterface>  getAnswer(const std::string & peerid, webrtc::SessionDescriptionInterface *session_description, const std::string & videourl, const std::string & audiourl, const std::string & options);
 		std::string                                           getOldestPeerCannection();
-		void                                                  printOptsResult(const auto &pair)
-		void                                                  printNode(const auto &node);
+		void                                                  print_opts(const std::map<std::string, std::string> & m);
 
 
 

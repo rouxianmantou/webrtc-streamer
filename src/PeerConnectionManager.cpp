@@ -1224,12 +1224,11 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	}
 
 	std::string def_opt_key, def_opt_value;
-	while (std::getLine(std::getline(def_is, def_opt_key, '='), def_opt_value, '&'))
+	while (std::getline(std::getline(def_is, def_opt_key, '='), def_opt_value, '&'))
 	{
-		printOptsResult(opts.try_emplace(def_opt_key, def_opt_value));
+		opts.try_emplace(def_opt_key, def_opt_value);
 	}
-	
-
+	print_opts(opts);
 	std::cout << "DEBUG_Log PeerConnectionManager::AddStreams: videourl: " << videourl << std::endl;
 	std::string video = videourl;
 	if (m_config.isMember(video)) {
@@ -1351,14 +1350,14 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	return ret;
 }
 
-void PeerConnectionManager::printNode(const auto &node) {
-	std::cout << "[" << node.first << "] = " << node.second << endl;
+void print_opts(const std::map<std::string, std::string> & m)
+{
+	for(const auto & it: m)
+	{
+		std::cout << m.first << " = " << m.second << endl;
+	}	
 }
 
-void PeerConnectionManager::printOptsResult(const auto &pair) {
-	std::cout << (pair.second ? "insert: " : "ignore: ");
-	printNode(*pair.first);
-}
 
 /* ---------------------------------------------------------------------------
 **  ICE callback
