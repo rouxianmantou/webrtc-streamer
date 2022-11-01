@@ -1354,7 +1354,7 @@ void print_opts(const std::map<std::string, std::string> & m)
 {
 	for(const auto & it: m)
 	{
-		std::cout << it.first << " = " << it.second << endl;
+		std::cout << it.first << " = " << it.second << std::endl;
 	}	
 }
 
