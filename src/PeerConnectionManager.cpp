@@ -1350,7 +1350,7 @@ bool PeerConnectionManager::AddStreams(webrtc::PeerConnectionInterface *peer_con
 	return ret;
 }
 
-void print_opts(const std::map<std::string, std::string> & m)
+void PeerConnectionManager::print_opts(const std::map<std::string, std::string> & m)
 {
 	for(const auto & it: m)
 	{
