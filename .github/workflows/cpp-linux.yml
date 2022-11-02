@@ -14,7 +14,9 @@ jobs:
     - uses: actions/checkout@v1
 
     - name: pkg
-      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends g++ autoconf automake libtool xz-utils libasound2-dev libpulse-dev libgtk-3-dev cmake p7zip-full
+      run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends g++ autoconf automake libtool xz-utils libasound2-dev libpulse-dev libgtk-3-dev cmake p7zip-full
+          sudo pip3 install dataclasses
 
     - name: depot_tools
       run: |
@@ -27,7 +29,7 @@ jobs:
           pushd webrtc
           fetch --no-history --nohooks webrtc
           sed -i -e "s|'src/resources'],|'src/resources'],'condition':'rtc_include_tests==true',|" src/DEPS 
-          gclient sync 
+          gclient sync
           popd
 
     - name: build
