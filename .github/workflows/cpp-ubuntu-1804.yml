@@ -1,4 +1,4 @@
-name: C/C++ CI linux
+name: Ubuntu-1804
 
 on: [push]
 
