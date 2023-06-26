@@ -25,6 +25,9 @@
 #include "V4l2AlsaMap.h"
 #include "CapturerFactory.h"
 
+#include "VideoEncoderFactory.h"
+#include "VideoDecoderFactory.h"
+
 #include "NullEncoder.h"
 #include "NullDecoder.h"
 
