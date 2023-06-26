@@ -9,10 +9,9 @@
 
 #pragma once
 
-#include "sdpclient.h"
 
 #include "livevideosource.h"
-
+#include "rtspconnectionclient.h"
 
 class RTPVideoCapturer : public LiveVideoSource<SDPClient>
 {
