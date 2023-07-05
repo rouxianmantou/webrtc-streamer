@@ -439,19 +439,19 @@ const Json::Value PeerConnectionManager::getMediaList()
 {
 	Json::Value value(Json::arrayValue);
 
-	const std::list<std::string> videoCaptureDevice = CapturerFactory::GetVideoCaptureDeviceList(m_publishFilter, m_useNullCodec);
-	for (auto videoDevice : videoCaptureDevice)
-	{
-		Json::Value media;
-		media["video"] = videoDevice;
+	// const std::list<std::string> videoCaptureDevice = CapturerFactory::GetVideoCaptureDeviceList(m_publishFilter, m_useNullCodec);
+	// for (auto videoDevice : videoCaptureDevice)
+	// {
+	// 	Json::Value media;
+	// 	media["video"] = videoDevice;
 
-		std::map<std::string, std::string>::iterator it = m_videoaudiomap.find(videoDevice);
-		if (it != m_videoaudiomap.end())
-		{
-			media["audio"] = it->second;
-		}
-		value.append(media);
-	}
+	// 	std::map<std::string, std::string>::iterator it = m_videoaudiomap.find(videoDevice);
+	// 	if (it != m_videoaudiomap.end())
+	// 	{
+	// 		media["audio"] = it->second;
+	// 	}
+	// 	value.append(media);
+	// }
 
     // Disable screen:// & window:// source
 	// const std::list<std::string> videoList = CapturerFactory::GetVideoSourceList(m_publishFilter, m_useNullCodec);
@@ -462,18 +462,17 @@ const Json::Value PeerConnectionManager::getMediaList()
 	// 	value.append(media);
 	// }
 
-    // Disable config.json
-	// for( auto it = m_config.begin() ; it != m_config.end() ; it++ ) {
-	// 	std::string name = it.key().asString();
-	// 	Json::Value media(*it);
-	// 	if (media.isMember("video")) {
-	// 		media["video"]=name;
-	// 	} 
-	// 	if (media.isMember("audio")) {
-	// 		media["audio"]=name;
-	// 	} 
-	// 	value.append(media);
-	// }
+	for( auto it = m_config.begin() ; it != m_config.end() ; it++ ) {
+		std::string name = it.key().asString();
+		Json::Value media(*it);
+		if (media.isMember("video")) {
+			media["video"]=name;
+		} 
+		if (media.isMember("audio")) {
+			media["audio"]=name;
+		} 
+		value.append(media);
+	}
 
 	return value;
 }
