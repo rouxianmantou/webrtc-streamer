@@ -15,13 +15,14 @@
 
 std::string getUsbPort(const char* fullPath) {
 	char* resolvedPath = realpath(fullPath, NULL);
+	std::string realPath = "";
 	if (resolvedPath) {
 		std::cout << "Get real path SUCCESS: " << resolvedPath << std::endl;
+		realPath = resolvedPath;
 	} else {
 		std::cout << "Get real path FAILED!" << std::endl;
-		resolvedPath = fullPath;
+		realPath = fullPath;
 	}
-	std::string realPath(resolvedPath);
 	auto lastSlashPos = realPath.find_last_of('/');
 	std::string lastPath = "";
 	if (lastSlashPos != std::string::npos && lastSlashPos < realPath.length() - 1) {
