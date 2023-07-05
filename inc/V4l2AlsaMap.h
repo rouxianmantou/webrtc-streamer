@@ -11,25 +11,47 @@
 
 #ifndef WIN32
 #include <dirent.h>
+#include <stdlib.h>
+
+std::string getUsbPort(const std::string& fullPath) {
+	auto lastSlashPos = fullPath.find_last_of('/');
+	std::string lastPath = "";
+	if (lastSlashPos != std::string::npos && lastSlashPos < fullPath.length() - 1) {
+		lastPath = fullPath.substr(lastSlashPos + 1);
+	} else {
+		lastPath = fullPath;
+	}
+
+	auto colonPos = lastPath.find_first_of(':');
+	if (colonPos != std::string::npos) {
+		lastPath = lastPath.substr(0, colonPos);
+	}
+
+	return lastPath;
+}
 
 /* ---------------------------------------------------------------------------
 **  get a "deviceid" from uevent sys file
 ** -------------------------------------------------------------------------*/
-std::string getDeviceId(const std::string& evt) {
+std::string getDeviceId(const std::string& evt, const std::string& devicePath) {
     std::string deviceid;
     std::istringstream f(evt);
     std::string key;
+	std::string deviceUsbPort = getUsbPort(devicePath);
     while (getline(f, key, '=')) {
             std::string value;
 	    if (getline(f, value)) {
 		    if ( (key =="PRODUCT") || (key == "PCI_SUBSYS_ID") ) {
-			    deviceid = value;
+			    value.append("/").append(deviceUsbPort);
+				std::cout << "Device ID: " << value << std::endl;
+				deviceid = value;
 			    break;
 		    }
 	    }
     }
     return deviceid;
 }
+
 std::map<std::string,std::string> getVideoDevices() {
 	std::map<std::string,std::string> videodevices;
 	std::string video4linuxPath("/sys/class/video4linux");
@@ -39,6 +61,7 @@ std::map<std::string,std::string> getVideoDevices() {
 		while((entry = readdir(dp))) {
 			std::string devicename;
 			std::string deviceid;
+			std::string deviceSymlinkPath(video4linuxPath);
 			if (strstr(entry->d_name,"video") == entry->d_name) {
 				std::string devicePath(video4linuxPath);
 				devicePath.append("/").append(entry->d_name).append("/name");
@@ -48,13 +71,16 @@ std::map<std::string,std::string> getVideoDevices() {
 
 				std::string ueventPath(video4linuxPath);
 				ueventPath.append("/").append(entry->d_name).append("/device/uevent");
+				deviceSymlinkPath.append("/").append(entry->d_name).append("/device");
+				std::cout << "Video Device {" << entry->d_name << "} path: " << deviceSymlinkPath << std::endl;
+
 				std::ifstream ifsd(ueventPath.c_str());
 				deviceid = std::string(std::istreambuf_iterator<char>{ifsd}, {});
 				deviceid.erase(deviceid.find_last_not_of("\n")+1);
 			}
 
 			if (!devicename.empty() && !deviceid.empty()) {
-				videodevices[devicename] = getDeviceId(deviceid);
+				videodevices[devicename] = getDeviceId(deviceid, deviceSymlinkPath);
 			}
 		}
 		closedir(dp);
@@ -71,14 +97,17 @@ std::map<std::string,std::string> getAudioDevices() {
 		while((entry = readdir(dp))) {
 			std::string devicename;
 			std::string deviceid;
+			std::string deviceSymlinkPath(audioLinuxPath);
 			if (strstr(entry->d_name,"card") == entry->d_name) {
 				std::string devicePath(audioLinuxPath);
-				devicePath.append("/").append(entry->d_name).append("/device/uevent");	
+				devicePath.append("/").append(entry->d_name).append("/device/uevent");
+				deviceSymlinkPath.append("/").append(entry->d_name).append("/device");
+				std::cout << "Audio Device {" << entry->d_name << "} path: " << deviceSymlinkPath << std::endl;
 
 				std::ifstream ifs(devicePath.c_str());
 				std::string deviceid = std::string(std::istreambuf_iterator<char>{ifs}, {});
 				deviceid.erase(deviceid.find_last_not_of("\n")+1);
-				deviceid = getDeviceId(deviceid);
+				deviceid = getDeviceId(deviceid, deviceSymlinkPath);
 
 				if (!deviceid.empty()) {
 					if (audiodevices.find(deviceid) == audiodevices.end()) {

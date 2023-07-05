@@ -296,10 +296,15 @@ PeerConnectionManager::PeerConnectionManager(const std::list<std::string> &iceSe
 		return std::make_tuple(200, std::map<std::string,std::string>(),this->getStreamList());
 	};
 
+	m_func["/api/getCaptureDeviceList"] = [this](const struct mg_request_info *req_info, const Json::Value &in) -> HttpServerRequestHandler::httpFunctionReturn {
+		return std::make_tuple(200, std::map<std::string,std::string>(),this->getCaptureDeviceList());
+	};
+
 	m_func["/api/version"] = [](const struct mg_request_info *req_info, const Json::Value &in) -> HttpServerRequestHandler::httpFunctionReturn {
 		Json::Value answer(VERSION);
 		return std::make_tuple(200, std::map<std::string,std::string>(), answer);
 	};
+
 	m_func["/api/log"] = [](const struct mg_request_info *req_info, const Json::Value &in) -> HttpServerRequestHandler::httpFunctionReturn {
 		std::string loglevel   = getParam(req_info->query_string, "level");
 		if (!loglevel.empty())
@@ -309,6 +314,7 @@ PeerConnectionManager::PeerConnectionManager(const std::list<std::string> &iceSe
 		Json::Value answer(rtc::LogMessage::GetLogToDebug());
 		return std::make_tuple(200, std::map<std::string,std::string>(), answer);
 	};
+
 	m_func["/api/help"] = [this](const struct mg_request_info *req_info, const Json::Value &in) -> HttpServerRequestHandler::httpFunctionReturn {
 		Json::Value answer(Json::ValueType::arrayValue);
 		for (auto it : m_func) {
@@ -447,25 +453,27 @@ const Json::Value PeerConnectionManager::getMediaList()
 		value.append(media);
 	}
 
-	const std::list<std::string> videoList = CapturerFactory::GetVideoSourceList(m_publishFilter, m_useNullCodec);
-	for (auto videoSource : videoList)
-	{
-		Json::Value media;
-		media["video"] = videoSource;
-		value.append(media);
-	}
+    // Disable screen:// & window:// source
+	// const std::list<std::string> videoList = CapturerFactory::GetVideoSourceList(m_publishFilter, m_useNullCodec);
+	// for (auto videoSource : videoList)
+	// {
+	// 	Json::Value media;
+	// 	media["video"] = videoSource;
+	// 	value.append(media);
+	// }
 
-	for( auto it = m_config.begin() ; it != m_config.end() ; it++ ) {
-		std::string name = it.key().asString();
-		Json::Value media(*it);
-		if (media.isMember("video")) {
-			media["video"]=name;
-		} 
-		if (media.isMember("audio")) {
-			media["audio"]=name;
-		} 
-		value.append(media);
-	}
+    // Disable config.json
+	// for( auto it = m_config.begin() ; it != m_config.end() ; it++ ) {
+	// 	std::string name = it.key().asString();
+	// 	Json::Value media(*it);
+	// 	if (media.isMember("video")) {
+	// 		media["video"]=name;
+	// 	} 
+	// 	if (media.isMember("audio")) {
+	// 		media["audio"]=name;
+	// 	} 
+	// 	value.append(media);
+	// }
 
 	return value;
 }
@@ -1043,6 +1051,35 @@ const Json::Value PeerConnectionManager::getStreamList()
 	{
 		value.append(it.first);
 	}
+	return value;
+}
+
+/* ---------------------------------------------------------------------------
+**  get CaptureDevice list
+** -------------------------------------------------------------------------*/
+const Json::Value PeerConnectionManager::getCaptureDeviceList()
+{
+	std::map<std::string,std::string> videodevices = getVideoDevices();
+	std::map<std::string,std::string> audiodevices = getAudioDevices();
+
+    Json::Value value(Json::arrayValue);
+
+	for (auto & videoDevice : videodevices) {
+		Json::Value media;
+		media["type"] = "video";
+		media["name"] = videoDevice.first;
+		media["id"] = videoDevice.second;
+		value.append(media);
+	}
+
+	for (auto & audioDevice: audiodevices) {
+		Json::Value media;
+		media["type"] = "audio";
+		media["id"] = audioDevice.first;
+		media["name"] = audioDevice.second;
+		value.append(media);
+	}
+
 	return value;
 }
 

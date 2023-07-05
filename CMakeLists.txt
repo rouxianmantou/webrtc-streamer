@@ -101,13 +101,17 @@ if (NOT EXISTS ${WEBRTCOBJS}/${CMAKE_STATIC_LIBRARY_PREFIX}webrtc${CMAKE_STATIC_
   endif()
   set (WEBRTCARGS is_clang=true\n${WEBRTCARGS})
 
+  # --> Original settings
   # screen capture support
-  find_package(PkgConfig QUIET)
-  pkg_check_modules(GTK3 QUIET gtk+-3.0)
-  MESSAGE("GTK3_FOUND = ${GTK3_FOUND}")
-  if(NOT GTK3_FOUND OR (WEBRTCDESKTOPCAPTURE STREQUAL "OFF"))
-    set (WEBRTCARGS rtc_use_x11=false\nrtc_use_pipewire=false\n${WEBRTCARGS})
-  endif()
+  # find_package(PkgConfig QUIET)
+  # pkg_check_modules(GTK3 QUIET gtk+-3.0)
+  # MESSAGE("GTK3_FOUND = ${GTK3_FOUND}")
+  # if(NOT GTK3_FOUND OR (WEBRTCDESKTOPCAPTURE STREQUAL "OFF"))
+  #   set (WEBRTCARGS rtc_use_x11=false\nrtc_use_pipewire=false\n${WEBRTCARGS})
+  # endif()
+  
+  # Disable Screen & Window capture, set USE_X11 to false.
+  set (WEBRTCARGS rtc_use_x11=false\nrtc_use_pipewire=false\n${WEBRTCARGS})
 
   # write conf file
   FILE(WRITE ${WEBRTCROOT}/src/out/${CMAKE_BUILD_TYPE}/args.gn ${WEBRTCARGS})

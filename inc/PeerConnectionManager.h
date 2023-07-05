@@ -338,6 +338,7 @@ class PeerConnectionManager {
 		const Json::Value getIceServers(const std::string& clientIp);
 		const Json::Value getPeerConnectionList();
 		const Json::Value getStreamList();
+		const Json::Value getCaptureDeviceList();
 		const Json::Value createOffer(const std::string &peerid, const std::string & videourl, const std::string & audiourl, const std::string & options);
 		const Json::Value setAnswer(const std::string &peerid, const Json::Value& jmessage);
 		std::tuple<int,std::map<std::string,std::string>,Json::Value> whep( const std::string &method,  const std::string &url,  const std::string &peerid, const std::string & videourl, const std::string & audiourl, const std::string & options, const Json::Value &in);
