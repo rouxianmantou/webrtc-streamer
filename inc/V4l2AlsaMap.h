@@ -13,13 +13,21 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-std::string getUsbPort(const std::string& fullPath) {
-	auto lastSlashPos = fullPath.find_last_of('/');
-	std::string lastPath = "";
-	if (lastSlashPos != std::string::npos && lastSlashPos < fullPath.length() - 1) {
-		lastPath = fullPath.substr(lastSlashPos + 1);
+std::string getUsbPort(const char* fullPath) {
+	char* resolvedPath = realpath(fullPath, NULL);
+	if (resolvedPath) {
+		std::cout << "Get real path SUCCESS: " << resolvedPath << std::endl;
 	} else {
-		lastPath = fullPath;
+		std::cout << "Get real path FAILED!" << std::endl;
+		resolvedPath = fullPath;
+	}
+	std::string realPath(resolvedPath);
+	auto lastSlashPos = realPath.find_last_of('/');
+	std::string lastPath = "";
+	if (lastSlashPos != std::string::npos && lastSlashPos < realPath.length() - 1) {
+		lastPath = realPath.substr(lastSlashPos + 1);
+	} else {
+		lastPath = realPath;
 	}
 
 	auto colonPos = lastPath.find_first_of(':');
@@ -37,7 +45,7 @@ std::string getDeviceId(const std::string& evt, const std::string& devicePath) {
     std::string deviceid;
     std::istringstream f(evt);
     std::string key;
-	std::string deviceUsbPort = getUsbPort(devicePath);
+	std::string deviceUsbPort = getUsbPort(devicePath.c_str());
     while (getline(f, key, '=')) {
             std::string value;
 	    if (getline(f, value)) {
