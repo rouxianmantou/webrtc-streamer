@@ -9,90 +9,79 @@
 
 #pragma once
 
-#ifndef WIN32
-#include <dirent.h>
-#include <stdlib.h>
-
-std::string getUsbPort(const char* fullPath) {
-	char* resolvedPath = realpath(fullPath, NULL);
-	std::string realPath = "";
-	if (resolvedPath) {
-		std::cout << "Get real path SUCCESS: " << resolvedPath << std::endl;
-		realPath = resolvedPath;
-	} else {
-		std::cout << "Get real path FAILED!" << std::endl;
-		realPath = fullPath;
-	}
-	auto lastSlashPos = realPath.find_last_of('/');
-	std::string lastPath = "";
-	if (lastSlashPos != std::string::npos && lastSlashPos < realPath.length() - 1) {
-		lastPath = realPath.substr(lastSlashPos + 1);
-	} else {
-		lastPath = realPath;
-	}
-
-	auto colonPos = lastPath.find_first_of(':');
-	if (colonPos != std::string::npos) {
-		lastPath = lastPath.substr(0, colonPos);
-	}
-
-	return lastPath;
-}
+#ifdef HAVE_V4L2
+#include <string>
+#include <cstring>
+#include <map>
+#include <filesystem>
+#include <sstream>
+#include <iostream>
+#include <linux/videodev2.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 /* ---------------------------------------------------------------------------
-**  get a "deviceid" from uevent sys file
+**  get "deviceid" 
 ** -------------------------------------------------------------------------*/
-std::string getDeviceId(const std::string& evt, const std::string& devicePath) {
-    std::string deviceid;
-    std::istringstream f(evt);
-    std::string key;
-	std::string deviceUsbPort = getUsbPort(devicePath.c_str());
-    while (getline(f, key, '=')) {
-            std::string value;
-	    if (getline(f, value)) {
-		    if ( (key =="PRODUCT") || (key == "PCI_SUBSYS_ID") ) {
-			    value.append("/").append(deviceUsbPort);
-				std::cout << "Device ID: " << value << std::endl;
-				deviceid = value;
-			    break;
-		    }
-	    }
-    }
-    return deviceid;
+std::string getDeviceId(const std::string& devicePath) {
+	std::string deviceid;
+	std::filesystem::path fspath(devicePath);
+	if (std::filesystem::exists(fspath))
+	{
+		std::string filename = std::filesystem::read_symlink(fspath).filename();
+		std::stringstream ss(filename);
+		getline(ss, deviceid, ':');
+	}
+	return deviceid;
 }
 
+std::map<int,int> videoDev2Idx() {
+  std::map<int,int> dev2idx;
+  uint32_t count = 0;
+  char device[20];
+  int fd = -1;
+  struct v4l2_capability cap;
+
+  for (int devId = 0; devId < 64; devId++) {
+    snprintf(device, sizeof(device), "/dev/video%d", devId);
+    if ((fd = open(device, O_RDONLY)) != -1) {
+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
+          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
+        close(fd);
+        continue;
+      } else {
+		close(fd);
+		dev2idx[devId] = count;
+		count++;
+	  }
+    }
+  }
+  return dev2idx;
+}
+
+
+
 std::map<std::string,std::string> getVideoDevices() {
+	std::map<int,int> dev2Idx = videoDev2Idx();
 	std::map<std::string,std::string> videodevices;
 	std::string video4linuxPath("/sys/class/video4linux");
-	DIR *dp = opendir(video4linuxPath.c_str());
-	if (dp != NULL) {
-		struct dirent *entry = NULL;
-		while((entry = readdir(dp))) {
-			std::string devicename;
-			std::string deviceid;
-			std::string deviceSymlinkPath(video4linuxPath);
-			if (strstr(entry->d_name,"video") == entry->d_name) {
-				std::string devicePath(video4linuxPath);
-				devicePath.append("/").append(entry->d_name).append("/name");
-				std::ifstream ifsn(devicePath.c_str());
-				devicename = std::string(std::istreambuf_iterator<char>{ifsn}, {});
-				devicename.erase(devicename.find_last_not_of("\n")+1);
+	if (std::filesystem::exists(video4linuxPath)) {
+		for (auto const& dir_entry : std::filesystem::directory_iterator{video4linuxPath}) {
+			std::string devname(dir_entry.path().filename());
+			if (devname.find("video") == 0) {
 
-				std::string ueventPath(video4linuxPath);
-				ueventPath.append("/").append(entry->d_name).append("/device/uevent");
-				deviceSymlinkPath.append("/").append(entry->d_name).append("/device");
-				std::cout << "Video Device {" << entry->d_name << "} path: " << deviceSymlinkPath << std::endl;
+				std::filesystem::path devicePath(dir_entry.path());
+				devicePath.append("device");
+				std::string deviceid = getDeviceId(devicePath);
 
-				std::ifstream ifsd(ueventPath.c_str());
-				deviceid = std::string(std::istreambuf_iterator<char>{ifsd}, {});
-				deviceid.erase(deviceid.find_last_not_of("\n")+1);
-			}
-
-			if (!devicename.empty() && !deviceid.empty()) {
-				videodevices[devicename] = getDeviceId(deviceid, deviceSymlinkPath);
+				if (!deviceid.empty()) {
+					int deviceNumber = atoi(devname.substr(strlen("video")).c_str());
+					std::string devicename = "videocap://";
+					devicename += std::to_string(dev2Idx[deviceNumber]);				
+					videodevices[devicename] = deviceid;
+				}
 			}
 		}
-		closedir(dp);
 	}
 	return videodevices;
 }
@@ -100,37 +89,22 @@ std::map<std::string,std::string> getVideoDevices() {
 std::map<std::string,std::string> getAudioDevices() {
 	std::map<std::string,std::string> audiodevices;
 	std::string audioLinuxPath("/sys/class/sound");
-	DIR *dp = opendir(audioLinuxPath.c_str());
-	if (dp != NULL) {
-		struct dirent *entry = NULL;
-		while((entry = readdir(dp))) {
-			std::string devicename;
-			std::string deviceid;
-			std::string deviceSymlinkPath(audioLinuxPath);
-			if (strstr(entry->d_name,"card") == entry->d_name) {
-				std::string devicePath(audioLinuxPath);
-				devicePath.append("/").append(entry->d_name).append("/device/uevent");
-				deviceSymlinkPath.append("/").append(entry->d_name).append("/device");
-				std::cout << "Audio Device {" << entry->d_name << "} path: " << deviceSymlinkPath << std::endl;
-
-				std::ifstream ifs(devicePath.c_str());
-				std::string deviceid = std::string(std::istreambuf_iterator<char>{ifs}, {});
-				deviceid.erase(deviceid.find_last_not_of("\n")+1);
-				deviceid = getDeviceId(deviceid, deviceSymlinkPath);
+	if (std::filesystem::exists(audioLinuxPath)) {
+		for (auto const& dir_entry : std::filesystem::directory_iterator{audioLinuxPath}) {
+			std::string devname(dir_entry.path().filename());
+			if (devname.find("card") == 0) {
+				std::filesystem::path devicePath(dir_entry.path());
+				devicePath.append("device");
+				std::string deviceid = getDeviceId(devicePath);
 
 				if (!deviceid.empty()) {
-					if (audiodevices.find(deviceid) == audiodevices.end()) {
-						std::string audioname(entry->d_name);
-						int deviceNumber = atoi(audioname.substr(strlen("card")).c_str());
-
-						std::string devname = "audiocap://";
-						devname += std::to_string(deviceNumber);
-						audiodevices[deviceid] = devname;
-					}
-				}							
-			}
-		}	
-		closedir(dp);	
+					int deviceNumber = atoi(devname.substr(strlen("card")).c_str());
+					std::string devicename = "audiocap://";
+					devicename += std::to_string(deviceNumber);
+					audiodevices[deviceid] = devicename;
+				}				
+			}			
+		}
 	}
 	return audiodevices;
 }
