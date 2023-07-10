@@ -436,6 +436,7 @@ void PeerConnectionManager::createAudioModule(webrtc::AudioDeviceModule::AudioLa
 	m_audioDeviceModule = new webrtc::FakeAudioDeviceModule();
 #endif	
 }
+
 /* ---------------------------------------------------------------------------
 **  return deviceList as JSON vector
 ** -------------------------------------------------------------------------*/
@@ -457,7 +458,6 @@ const Json::Value PeerConnectionManager::getMediaList()
 		value.append(media);
 	}
 
-    Disable screen:// & window:// source
 	const std::list<std::string> videoList = CapturerFactory::GetVideoSourceList(m_publishFilter, m_useNullCodec);
 	for (auto videoSource : videoList)
 	{
