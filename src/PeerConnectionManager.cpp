@@ -1075,12 +1075,13 @@ const Json::Value PeerConnectionManager::getStreamList()
 ** -------------------------------------------------------------------------*/
 const Json::Value PeerConnectionManager::getCaptureDeviceList()
 {
-	std::map<std::string,std::string> videodevices = getVideoDevices();
-	std::map<std::string,std::string> audiodevices = getAudioDevices();
+	std::map<std::string, std::string> videodevices = getVideoDevices();
+	std::map<std::string, std::string> audiodevices = getAudioDevices();
 
-    Json::Value value(Json::arrayValue);
+	Json::Value value(Json::arrayValue);
 
-	for (auto & videoDevice : videodevices) {
+	for (auto &videoDevice : videodevices)
+	{
 		Json::Value media;
 		media["type"] = "video";
 		media["name"] = videoDevice.first;
@@ -1088,7 +1089,8 @@ const Json::Value PeerConnectionManager::getCaptureDeviceList()
 		value.append(media);
 	}
 
-	for (auto & audioDevice: audiodevices) {
+	for (auto &audioDevice : audiodevices)
+	{
 		Json::Value media;
 		media["type"] = "audio";
 		media["id"] = audioDevice.first;
@@ -1096,6 +1098,15 @@ const Json::Value PeerConnectionManager::getCaptureDeviceList()
 		value.append(media);
 	}
 
+	for (auto &item : m_videoaudiomap)
+	{
+		Json::Value media;
+		media["type"] = "m_videoaudiomap";
+		media["id"] = "m_videoaudiomap";
+		media["name"] = "m_videoaudiomap";
+		media["video"] = item->first;
+		media["audio"] = item->second;
+	}
 	return value;
 }
 
