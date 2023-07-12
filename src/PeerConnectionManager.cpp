@@ -1106,6 +1106,7 @@ const Json::Value PeerConnectionManager::getCaptureDeviceList()
 		media["name"] = "m_videoaudiomap";
 		media["video"] = item.first;
 		media["audio"] = item.second;
+		value.append(media);
 	}
 	return value;
 }
